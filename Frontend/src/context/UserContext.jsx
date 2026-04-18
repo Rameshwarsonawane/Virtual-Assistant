@@ -1,30 +1,48 @@
-import React, {createContext, use} from 'react'
-export const userDataContext=createContext()
+import React, { createContext, useState, useEffect } from "react";
+import axios from "axios";
 
-function UserContext({children}) {
-    const serverUrl="http://localhost:5000"
-    const [userDataContext,setUserData]=useState(null)
-    const handleCurrectUser=async()=>{
-        try{
-            const result=await axios.get('${serverUrl}/api/user/current',{withCredentials:true})
-            setUserData(result.data)
-            console.log(result.data)
-        }catch (error){
-    }
-    useEffect(()=>{
-        handleCurrectUser()
+export const UserDataContext = createContext();
 
-    },[])
-    const value={
-  serverUrl,userData,setUserData
+function UserContext({ children }) {
+  const serverUrl = "http://localhost:5000";
+
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true); // ✅ ADD THIS
+
+  const handleCurrentUser = async () => {
+    try {
+      const result = await axios.get(
+        `${serverUrl}/api/user/current`,
+        { withCredentials: true }
+      );
+      setUserData(result.data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false); // ✅ stop loading
     }
+  };
+
+  useEffect(() => {
+    handleCurrentUser();
+  }, []);
+
+  const value = {
+    serverUrl,
+    userData,
+    setUserData,
+  };
+
+  // ✅ PREVENT BLINK
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div>
-        <userDataContext.Provider value={value}>
-        {children}
-        </userDataContext.Provider>
-    </div>
-  )
+    <UserDataContext.Provider value={value}>
+      {children}
+    </UserDataContext.Provider>
+  );
 }
 
-export default UserContext
+export default UserContext;

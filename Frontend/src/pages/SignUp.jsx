@@ -5,7 +5,7 @@ import { IoEyeSharp } from "react-icons/io5";
 import {useNavigate} from 'react-router-dom';
 import axios from "axios"
 import { userDataContext } from "../context/UserContext"
-import { set } from 'mongoose';
+import { setUserData } from 'mongoose';
 
 
 
@@ -29,7 +29,7 @@ function SignUp() {
       },{withCredentials:true})
       setUserData(result.data)
       setLoading(false)
-      navigate("/customize")
+      navigate("/")
       }catch (error){
         console.log(error)
         setUserData(null)
