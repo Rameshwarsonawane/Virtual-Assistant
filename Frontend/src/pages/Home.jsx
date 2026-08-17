@@ -67,11 +67,14 @@ synth.speak(utterence);
   }
 
   const handleCommand=(data)=>{
+    if (!data) return;
     const {type,userInput,response}=data
+    if (response) {
       speak(response);
+    }
     
     if (type === 'google-search') {
-      const query = encodeURIComponent(userInput);
+      const query = encodeURIComponent(userInput || "");
       window.open(`https://www.google.com/search?q=${query}`, '_blank');
     }
      if (type === 'calculator-open') {
@@ -89,7 +92,7 @@ synth.speak(utterence);
     }
 
     if (type === 'youtube-search' || type === 'youtube-play') {
-      const query = encodeURIComponent(userInput);
+      const query = encodeURIComponent(userInput || "");
       window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank');
     }
 
@@ -162,16 +165,28 @@ useEffect(() => {
   };
 
   recognition.onresult = async (e) => {
-    const transcript = e.results[e.results.length - 1][0].transcript.trim();
-    if (transcript.toLowerCase().includes(userData.assistantName.toLowerCase())) {
-      setAiText("");
-      setUserText(transcript);
-      recognition.stop();
-      isRecognizingRef.current = false;
-      setListening(false);
-      const data = await getGeminiResponse(transcript);
-      handleCommand(data);
-      setAiText(data.response);
+    try {
+      const transcript = e.results[e.results.length - 1][0].transcript.trim();
+      if (transcript.toLowerCase().includes(userData.assistantName.toLowerCase())) {
+        setAiText("");
+        setUserText(transcript);
+        recognition.stop();
+        isRecognizingRef.current = false;
+        setListening(false);
+        const data = await getGeminiResponse(transcript);
+        if (data && (data.response || data.message)) {
+          handleCommand(data);
+          setAiText(data.response || data.message);
+        } else {
+          const fallbackMsg = "Sorry, I am having trouble connecting to the service.";
+          speak(fallbackMsg);
+          setAiText(fallbackMsg);
+        }
+        setUserText("");
+      }
+    } catch (err) {
+      console.error("Error processing voice command:", err);
+      speak("An error occurred. Please try again.");
       setUserText("");
     }
   };
